@@ -37,6 +37,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       console.log('✅ Camera access granted!');
       stream.getTracks().forEach(track => track.stop());
       setCameraPermission('granted');
+      setScannerActive(true); // Set this BEFORE initializing scanner
       initializeScanner();
     } catch (error: any) {
       console.error('❌ Camera error:', error);
@@ -56,6 +57,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           const stream = await navigator.mediaDevices.getUserMedia({ video: true });
           stream.getTracks().forEach(track => track.stop());
           setCameraPermission('granted');
+          setScannerActive(true); // Set this BEFORE initializing scanner
           initializeScanner();
           return;
         } catch (retryError) {
@@ -74,33 +76,48 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const initializeScanner = () => {
     if (scannerInitialized) return;
 
-    const scanner = new Html5QrcodeScanner(
-      'qr-reader',
-      {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
-      },
-      false
-    );
-
-    scanner.render(
-      (decodedText) => {
-        // Extract visitor ID from URL or use raw text
-        const match = decodedText.match(/id=([a-f0-9-]+)/i);
-        const visitorId = match ? match[1] : decodedText;
-        onScan(visitorId);
-        scanner.clear();
+    // Wait for DOM element to be available
+    setTimeout(() => {
+      const element = document.getElementById('qr-reader');
+      if (!element) {
+        console.error('QR reader element not found, retrying...');
         setScannerActive(false);
-        setScannerInitialized(false);
-      },
-      (error) => {
-        // Ignore scanning errors - they're thrown constantly during scanning
+        return;
       }
-    );
 
-    setScannerInitialized(true);
-    setScannerActive(true);
+      try {
+        const scanner = new Html5QrcodeScanner(
+          'qr-reader',
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          },
+          false
+        );
+
+        scanner.render(
+          (decodedText) => {
+            // Extract visitor ID from URL or use raw text
+            const match = decodedText.match(/id=([a-f0-9-]+)/i);
+            const visitorId = match ? match[1] : decodedText;
+            onScan(visitorId);
+            scanner.clear();
+            setScannerActive(false);
+            setScannerInitialized(false);
+          },
+          (error) => {
+            // Ignore scanning errors - they're thrown constantly during scanning
+          }
+        );
+
+        setScannerInitialized(true);
+      } catch (error) {
+        console.error('Error initializing scanner:', error);
+        setScannerActive(false);
+        alert('Failed to initialize camera scanner. Please try again.');
+      }
+    }, 100); // Small delay to ensure DOM is ready
   };
 
   const handleManualSubmit = (e: React.FormEvent) => {
