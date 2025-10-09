@@ -105,6 +105,8 @@ export default function GuardDashboard() {
         <div className="grid lg:grid-cols-3 gap-3 sm:gap-4">
           {/* Scanner Section */}
           <div className="lg:col-span-1 space-y-3 sm:space-y-4">
+            <QRScanner onScan={handleScan} />
+
             {/* Scan History */}
             <div className="card p-3 sm:p-4">
               <div className="flex items-center justify-between mb-3">
@@ -206,8 +208,6 @@ export default function GuardDashboard() {
                 </div>
               )}
             </div>
-
-            <QRScanner onScan={handleScan} />
           </div>
 
           {/* Verification Result */}
