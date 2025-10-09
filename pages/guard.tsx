@@ -36,9 +36,19 @@ export default function GuardDashboard() {
       const data = await response.json();
 
       setVerificationResult(data);
+      
+      // Auto-clear result after 3 seconds for continuous scanning
+      setTimeout(() => {
+        setVerificationResult(null);
+      }, 3000);
     } catch (error) {
       console.error('Verification error:', error);
       setVerificationResult({ verified: false });
+      
+      // Auto-clear error after 3 seconds
+      setTimeout(() => {
+        setVerificationResult(null);
+      }, 3000);
     } finally {
       setIsVerifying(false);
     }

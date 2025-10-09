@@ -11,6 +11,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const [scannerInitialized, setScannerInitialized] = useState(false);
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [scannerActive, setScannerActive] = useState(false);
+  const [scannerInstance, setScannerInstance] = useState<Html5QrcodeScanner | null>(null);
 
   const requestCameraPermission = async () => {
     try {
@@ -101,16 +102,24 @@ export default function QRScanner({ onScan }: QRScannerProps) {
             // Extract visitor ID from URL or use raw text
             const match = decodedText.match(/id=([a-f0-9-]+)/i);
             const visitorId = match ? match[1] : decodedText;
+            
+            // Play success beep (optional)
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvHZizYIGGS57OihUBELTKXh8bViFQY2jdXwyXksBSh+zPDckjgICli262adUxQKQJvd8bllHAU7gc3w2Ik2Bxhiu+vjnVISC0yl4PG1YhQGNIzU8Mh5KwUnitDv1pU5BxFfuuvm...');
+            audio.volume = 0.3;
+            audio.play().catch(() => {}); // Ignore if audio fails
+            
             onScan(visitorId);
-            scanner.clear();
-            setScannerActive(false);
-            setScannerInitialized(false);
+            // Don't clear scanner - keep it running for continuous scanning!
+            // scanner.clear();
+            // setScannerActive(false);
+            // setScannerInitialized(false);
           },
           (error) => {
             // Ignore scanning errors - they're thrown constantly during scanning
           }
         );
 
+        setScannerInstance(scanner);
         setScannerInitialized(true);
       } catch (error) {
         console.error('Error initializing scanner:', error);
@@ -119,6 +128,22 @@ export default function QRScanner({ onScan }: QRScannerProps) {
       }
     }, 100); // Small delay to ensure DOM is ready
   };
+
+  const stopScanner = () => {
+    if (scannerInstance) {
+      scannerInstance.clear().catch(console.error);
+      setScannerInstance(null);
+    }
+    setScannerInitialized(false);
+    setScannerActive(false);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopScanner();
+    };
+  }, [scannerInstance]);
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,7 +203,21 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         )}
 
         {scannerActive && (
-          <div id="qr-reader" className="w-full rounded-lg overflow-hidden"></div>
+          <>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium text-green-700">Camera Active - Ready to Scan</span>
+              </div>
+              <button
+                onClick={stopScanner}
+                className="text-red-600 hover:text-red-700 text-sm font-medium px-3 py-1 hover:bg-red-50 rounded transition"
+              >
+                Stop Camera
+              </button>
+            </div>
+            <div id="qr-reader" className="w-full rounded-lg overflow-hidden"></div>
+          </>
         )}
       </motion.div>
 
