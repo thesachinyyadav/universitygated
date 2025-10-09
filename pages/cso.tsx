@@ -497,34 +497,34 @@ export default function CSODashboard() {
         {activeTab === 'visitors' && (
           <>
             {/* Top Events */}
-            <div className="card mb-8">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2">
-            <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="card mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 flex items-center space-x-2">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <span>Top Events by Visitor Count</span>
           </h3>
           {topEvents.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {topEvents.map(([event, count], index) => (
-                <div key={event} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-maroon-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                <div key={event} className="flex items-center justify-between py-1">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-maroon-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold">
                       {index + 1}
                     </div>
-                    <span className="font-semibold text-gray-800">{event}</span>
+                    <span className="font-medium text-sm sm:text-base text-gray-800">{event}</span>
                   </div>
-                  <span className="text-gray-600">{count} visitors</span>
+                  <span className="text-xs sm:text-sm text-gray-600">{count} visitors</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-400">No event data available</p>
+            <p className="text-gray-400 text-sm">No event data available</p>
           )}
         </div>
 
         {/* Search and Export */}
-        <div className="card mb-6">
+        <div className="card mb-4 sm:mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
             <div className="flex-1 max-w-md">
               <input
@@ -549,67 +549,67 @@ export default function CSODashboard() {
 
         {/* All Visitors Table */}
         <div className="card overflow-x-auto">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">
             All Visitor Records ({filteredVisitors.length})
           </h3>
 
           {isLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-maroon-600 mx-auto"></div>
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-maroon-600 mx-auto"></div>
             </div>
           ) : filteredVisitors.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-8 text-gray-400">
               <p>No visitors found</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Name</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Contact</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Event</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">ID</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Name</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Contact</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Event</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Date</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredVisitors.map((visitor) => (
                     <tr key={visitor.id} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-3">
+                      <td className="px-2 py-2">
                         <code className="text-xs text-gray-500">{visitor.id.slice(0, 8)}...</code>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="font-semibold text-gray-800">{visitor.name}</div>
+                      <td className="px-2 py-2">
+                        <div className="font-medium text-gray-800 text-sm">{visitor.name}</div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="text-sm text-gray-600">
-                          {visitor.email && <div>{visitor.email}</div>}
+                      <td className="px-2 py-2">
+                        <div className="text-xs text-gray-600">
+                          {visitor.email && <div className="truncate max-w-[150px]">{visitor.email}</div>}
                           {visitor.phone && <div>{visitor.phone}</div>}
                           {!visitor.email && !visitor.phone && <span className="text-gray-400">N/A</span>}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">{visitor.event_name || 'N/A'}</td>
-                      <td className="px-4 py-3 text-gray-700">
+                      <td className="px-2 py-2 text-gray-700 text-sm max-w-[150px] truncate">{visitor.event_name || 'N/A'}</td>
+                      <td className="px-2 py-2 text-gray-700 text-xs whitespace-nowrap">
                         {(visitor.date_of_visit && visitor.date_of_visit !== '') 
                           ? new Date(visitor.date_of_visit).toLocaleDateString() 
                           : (visitor.date_of_visit_from && visitor.date_of_visit_to) 
                             ? `${new Date(visitor.date_of_visit_from).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${new Date(visitor.date_of_visit_to).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` 
                             : 'N/A'}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={`badge-${visitor.status}`}>
+                      <td className="px-2 py-2">
+                        <span className={`badge-${visitor.status} text-xs px-2 py-1`}>
                           {visitor.status.toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex space-x-2">
+                      <td className="px-2 py-2">
+                        <div className="flex space-x-1">
                           {visitor.status !== 'approved' && (
                             <button
                               onClick={() => updateStatus(visitor.id, 'approved')}
-                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                              className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
                               title="Approve"
                             >
                               ✓
@@ -618,7 +618,7 @@ export default function CSODashboard() {
                           {visitor.status !== 'revoked' && (
                             <button
                               onClick={() => updateStatus(visitor.id, 'revoked')}
-                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                              className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
                               title="Revoke"
                             >
                               ✕
