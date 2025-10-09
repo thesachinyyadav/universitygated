@@ -12,6 +12,8 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [scannerActive, setScannerActive] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const lastScanRef = useRef<{ id: string; timestamp: number } | null>(null);
+  const SCAN_COOLDOWN = 3000; // 3 seconds cooldown between same QR codes
 
   const requestCameraPermission = async () => {
     try {
@@ -103,11 +105,24 @@ export default function QRScanner({ onScan }: QRScannerProps) {
             const match = decodedText.match(/id=([a-f0-9-]+)/i);
             const visitorId = match ? match[1] : decodedText;
             
+            // Check if this is a duplicate scan within cooldown period
+            const now = Date.now();
+            if (lastScanRef.current && 
+                lastScanRef.current.id === visitorId && 
+                now - lastScanRef.current.timestamp < SCAN_COOLDOWN) {
+              console.log('⏱️ Duplicate scan ignored (cooldown active)');
+              return; // Ignore duplicate scan
+            }
+            
+            // Update last scan
+            lastScanRef.current = { id: visitorId, timestamp: now };
+            
             // Play success beep (optional)
             const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvHZizYIGGS57OihUBELTKXh8bViFQY2jdXwyXksBSh+zPDckjgICli262adUxQKQJvd8bllHAU7gc3w2Ik2Bxhiu+vjnVISC0yl4PG1YhQGNIzU8Mh5KwUnitDv1pU5BxFfuuvm...');
             audio.volume = 0.3;
             audio.play().catch(() => {}); // Ignore if audio fails
             
+            console.log('✅ QR code scanned:', visitorId);
             onScan(visitorId);
             // Don't clear scanner - keep it running for continuous scanning!
             // scanner.clear();
