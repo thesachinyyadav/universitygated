@@ -14,14 +14,60 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
   const requestCameraPermission = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Check if running on HTTPS or localhost
+      const isSecureContext = window.isSecureContext || window.location.hostname === 'localhost';
+      if (!isSecureContext) {
+        alert('⚠️ Camera requires HTTPS! Please use the deployed Vercel URL or localhost.');
+        setCameraPermission('denied');
+        return;
+      }
+
+      // Check if mediaDevices API is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('❌ Camera API not available in this browser. Please use Chrome, Firefox, or Safari.');
+        setCameraPermission('denied');
+        return;
+      }
+
+      console.log('🎥 Requesting camera access...');
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } // Prefer back camera on mobile
+      });
+      
+      console.log('✅ Camera access granted!');
       stream.getTracks().forEach(track => track.stop());
       setCameraPermission('granted');
       initializeScanner();
-    } catch (error) {
-      console.error('Camera permission denied:', error);
+    } catch (error: any) {
+      console.error('❌ Camera error:', error);
       setCameraPermission('denied');
-      alert('Camera access is required to scan QR codes. Please allow camera access in your browser settings.');
+      
+      let errorMessage = '';
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage = '🚫 Camera access denied!\n\nPlease click the camera icon in your browser address bar and allow camera access.';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage = '📷 No camera found on this device.';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage = '⚠️ Camera is being used by another application.\n\nPlease close other apps using the camera and try again.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = '⚙️ Camera constraints not supported. Trying again...';
+        // Retry without constraints
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          stream.getTracks().forEach(track => track.stop());
+          setCameraPermission('granted');
+          initializeScanner();
+          return;
+        } catch (retryError) {
+          errorMessage = '❌ Camera initialization failed.';
+        }
+      } else if (error.name === 'SecurityError') {
+        errorMessage = '🔒 Security error: Camera requires HTTPS!\n\nPlease deploy to Vercel or use localhost.';
+      } else {
+        errorMessage = `❌ Camera error: ${error.message || 'Unknown error'}\n\nPlease check browser settings.`;
+      }
+      
+      alert(errorMessage);
     }
   };
 
