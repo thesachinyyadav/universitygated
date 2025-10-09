@@ -13,7 +13,15 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const [scannerActive, setScannerActive] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const lastScanRef = useRef<{ id: string; timestamp: number } | null>(null);
-  const SCAN_COOLDOWN = 3000; // 3 seconds cooldown between same QR codes
+  const SCAN_COOLDOWN = 5000; // 5 seconds cooldown between same QR codes
+
+  // Vibration feedback function
+  const triggerVibration = () => {
+    if ('vibrate' in navigator) {
+      // Pattern: vibrate for 200ms, pause 100ms, vibrate for 200ms
+      navigator.vibrate([200, 100, 200]);
+    }
+  };
 
   const requestCameraPermission = async () => {
     try {
@@ -117,10 +125,8 @@ export default function QRScanner({ onScan }: QRScannerProps) {
             // Update last scan
             lastScanRef.current = { id: visitorId, timestamp: now };
             
-            // Play success beep (optional)
-            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvHZizYIGGS57OihUBELTKXh8bViFQY2jdXwyXksBSh+zPDckjgICli262adUxQKQJvd8bllHAU7gc3w2Ik2Bxhiu+vjnVISC0yl4PG1YhQGNIzU8Mh5KwUnitDv1pU5BxFfuuvm...');
-            audio.volume = 0.3;
-            audio.play().catch(() => {}); // Ignore if audio fails
+            // Trigger vibration feedback
+            triggerVibration();
             
             console.log('✅ QR code scanned:', visitorId);
             onScan(visitorId);
