@@ -205,18 +205,26 @@ export default function VisitorRegister() {
               {formData.event_id && (() => {
                 const selectedEvent = approvedEvents.find(e => e.id === formData.event_id);
                 return selectedEvent ? (
-                  <div className="mt-2 p-3 bg-blue-50 rounded-lg text-xs sm:text-sm">
-                    <p className="text-blue-800 font-semibold">{selectedEvent.event_name}</p>
+                  <div className="mt-2 p-3 sm:p-4 bg-blue-50 rounded-lg text-xs sm:text-sm">
+                    <p className="text-blue-800 font-semibold text-base sm:text-lg">{selectedEvent.event_name}</p>
                     <p className="text-blue-600">{selectedEvent.department}</p>
                     {selectedEvent.description && (
                       <p className="text-blue-700 mt-1">{selectedEvent.description}</p>
                     )}
-                    <p className="text-blue-600 mt-1">
+                    <p className="text-blue-600 mt-2">
                       📅 {new Date(selectedEvent.date_from).toLocaleDateString()} - {new Date(selectedEvent.date_to).toLocaleDateString()}
                     </p>
-                    <p className="text-blue-600">
-                      👥 {selectedEvent.available_slots} of {selectedEvent.max_capacity} slots available
-                    </p>
+                    <div className="mt-3 p-3 bg-green-100 border-2 border-green-400 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-green-700 font-medium">Available Slots:</span>
+                        <span className="text-2xl sm:text-3xl font-bold text-green-700">
+                          {selectedEvent.available_slots}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-green-600 mt-1">
+                        out of {selectedEvent.max_capacity} total capacity
+                      </p>
+                    </div>
                   </div>
                 ) : null;
               })()}

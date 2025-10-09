@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { motion } from 'framer-motion';
 
@@ -11,7 +11,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   const [scannerInitialized, setScannerInitialized] = useState(false);
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [scannerActive, setScannerActive] = useState(false);
-  const [scannerInstance, setScannerInstance] = useState<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   const requestCameraPermission = async () => {
     try {
@@ -119,7 +119,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           }
         );
 
-        setScannerInstance(scanner);
+        scannerRef.current = scanner;
         setScannerInitialized(true);
       } catch (error) {
         console.error('Error initializing scanner:', error);
@@ -130,20 +130,22 @@ export default function QRScanner({ onScan }: QRScannerProps) {
   };
 
   const stopScanner = () => {
-    if (scannerInstance) {
-      scannerInstance.clear().catch(console.error);
-      setScannerInstance(null);
+    if (scannerRef.current) {
+      scannerRef.current.clear().catch(console.error);
+      scannerRef.current = null;
     }
     setScannerInitialized(false);
     setScannerActive(false);
   };
 
-  // Cleanup on unmount
+  // Cleanup on unmount only
   useEffect(() => {
     return () => {
-      stopScanner();
+      if (scannerRef.current) {
+        scannerRef.current.clear().catch(console.error);
+      }
     };
-  }, [scannerInstance]);
+  }, []); // Empty dependency array - only run on mount/unmount
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
