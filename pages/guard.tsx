@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import QRScanner from '@/components/QRScanner';
 import type { Visitor } from '@/types/database';
+
+interface ScanHistoryItem {
+  id: string;
+  timestamp: Date;
+  verified: boolean;
+  visitor?: Partial<Visitor>;
+}
 
 export default function GuardDashboard() {
   const router = useRouter();
@@ -12,6 +19,7 @@ export default function GuardDashboard() {
     visitor?: Partial<Visitor>;
   } | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -37,6 +45,15 @@ export default function GuardDashboard() {
 
       setVerificationResult(data);
       
+      // Add to scan history
+      const historyItem: ScanHistoryItem = {
+        id: visitorId,
+        timestamp: new Date(),
+        verified: data.verified,
+        visitor: data.visitor
+      };
+      setScanHistory(prev => [historyItem, ...prev]); // Add to top of list
+      
       // Auto-clear result after 3 seconds for continuous scanning
       setTimeout(() => {
         setVerificationResult(null);
@@ -45,6 +62,14 @@ export default function GuardDashboard() {
       console.error('Verification error:', error);
       setVerificationResult({ verified: false });
       
+      // Add failed scan to history
+      const historyItem: ScanHistoryItem = {
+        id: visitorId,
+        timestamp: new Date(),
+        verified: false
+      };
+      setScanHistory(prev => [historyItem, ...prev]);
+      
       // Auto-clear error after 3 seconds
       setTimeout(() => {
         setVerificationResult(null);
@@ -52,6 +77,10 @@ export default function GuardDashboard() {
     } finally {
       setIsVerifying(false);
     }
+  };
+
+  const clearHistory = () => {
+    setScanHistory([]);
   };
 
   if (!user) {
@@ -73,17 +102,18 @@ export default function GuardDashboard() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid lg:grid-cols-3 gap-3 sm:gap-4">
           {/* Scanner Section */}
-          <div>
+          <div className="lg:col-span-1">
             <QRScanner onScan={handleScan} />
           </div>
 
           {/* Verification Result */}
-          <div>
-            <div className="card sticky top-16 sm:top-20 p-3 sm:p-4">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+            {/* Current Scan Result */}
+            <div className="card p-3 sm:p-4">
               <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 sm:mb-3">
-                Verification Result
+                Current Scan
               </h3>
 
               {isVerifying && (
@@ -161,9 +191,137 @@ export default function GuardDashboard() {
                     onClick={() => setVerificationResult(null)}
                     className="mt-3 sm:mt-4 btn-secondary w-full text-xs sm:text-sm py-2.5"
                   >
-                    Scan Another
+                    Continue Scanning
                   </button>
                 </motion.div>
+              )}
+            </div>
+
+            {/* Scan History */}
+            <div className="card p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                    Scan History
+                    {scanHistory.length > 0 && (
+                      <span className="ml-2 text-xs sm:text-sm font-normal text-gray-500">
+                        ({scanHistory.length} scanned)
+                      </span>
+                    )}
+                  </h3>
+                </div>
+                {scanHistory.length > 0 && (
+                  <button
+                    onClick={clearHistory}
+                    className="text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 rounded-lg hover:bg-red-50 transition"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
+
+              {scanHistory.length === 0 ? (
+                <div className="text-center py-6 text-gray-400">
+                  <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-xs sm:text-sm">No scans yet in this session</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  <AnimatePresence>
+                    {scanHistory.map((item, index) => (
+                      <motion.div
+                        key={`${item.id}-${item.timestamp.getTime()}`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ duration: 0.2 }}
+                        className={`p-2 sm:p-3 rounded-lg border-2 ${
+                          item.verified
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-red-50 border-red-200'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
+                            {/* Status Icon */}
+                            {item.verified ? (
+                              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            )}
+                            
+                            {/* Visitor Info */}
+                            <div className="flex-1 min-w-0">
+                              {item.visitor ? (
+                                <>
+                                  <p className="font-semibold text-gray-800 text-xs sm:text-sm truncate">
+                                    {item.visitor.name}
+                                  </p>
+                                  <p className="text-xs text-gray-600 truncate">
+                                    {item.visitor.event_name || 'No event'}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-0.5">
+                                    {item.timestamp.toLocaleTimeString()}
+                                  </p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="font-semibold text-red-700 text-xs sm:text-sm">
+                                    Invalid QR Code
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-0.5">
+                                    {item.timestamp.toLocaleTimeString()}
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Status Badge */}
+                          <span
+                            className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
+                              item.verified
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {item.verified ? 'ALLOWED' : 'DENIED'}
+                          </span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {scanHistory.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="flex items-center justify-between text-xs sm:text-sm">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-1">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="text-gray-600">
+                          Allowed: <strong>{scanHistory.filter(s => s.verified).length}</strong>
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span className="text-gray-600">
+                          Denied: <strong>{scanHistory.filter(s => !s.verified).length}</strong>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
