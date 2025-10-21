@@ -1,11 +1,12 @@
 {
   "name": "Christ University Gated Access System",
-  "short_name": "CUGAS",
+  "short_name": "CU Gate",
   "description": "Visitor registration and event management system for Christ University",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#8B0000",
+  "background_color": "#254a9a",
+  "theme_color": "#254a9a",
   "orientation": "portrait-primary",
   "icons": [
     {

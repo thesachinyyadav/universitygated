@@ -5,9 +5,21 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    // Detect iOS
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(iOS);
+
+    // Check if already installed/standalone
+    const standalone = window.matchMedia('(display-mode: standalone)').matches 
+      || (navigator as any).standalone 
+      || document.referrer.includes('android-app://');
+    setIsStandalone(standalone);
+
     // Register service worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -22,7 +34,7 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
       });
     }
 
-    // Handle PWA install prompt
+    // Handle PWA install prompt (Android/Desktop)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -35,6 +47,17 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // For iOS Safari - show custom prompt
+    if (iOS && !standalone) {
+      const hasSeenIOSPrompt = localStorage.getItem('pwa-install-prompt-dismissed');
+      if (!hasSeenIOSPrompt) {
+        // Delay a bit so user sees the page first
+        setTimeout(() => {
+          setShowInstallPrompt(true);
+        }, 2000);
+      }
+    }
 
     // Check if app is installed
     window.addEventListener('appinstalled', () => {
@@ -63,6 +86,12 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const handleInstallClick = async () => {
+    // For iOS, we can't programmatically install, just show instructions
+    if (isIOS) {
+      // iOS install instructions are shown in the prompt itself
+      return;
+    }
+
     if (!deferredPrompt) return;
 
     deferredPrompt.prompt();
@@ -138,22 +167,42 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
                 </svg>
               </div>
               <div className="flex-1">
-                <h3 className="font-bold text-lg mb-1">Install Gate Access App</h3>
-                <p className="text-sm text-white/90 mb-3">
-                  Get quick access from your home screen. Works offline!
-                </p>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleInstallClick}
-                    className="flex-1 bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-all active:scale-95"
-                  >
-                    Install Now
-                  </button>
+                <h3 className="font-bold text-lg mb-1">
+                  {isIOS ? '📱 Add to Home Screen' : 'Install Gate Access App'}
+                </h3>
+                {isIOS ? (
+                  <>
+                    <p className="text-sm text-white/90 mb-2">
+                      Tap the <strong>Share button</strong> 
+                      <svg className="inline w-4 h-4 mx-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                      </svg>
+                      then <strong>"Add to Home Screen"</strong>
+                    </p>
+                    <div className="flex items-center space-x-2 bg-white/10 rounded p-2 text-xs">
+                      <span className="text-2xl">⬆️</span>
+                      <span>Look for the share icon at the bottom of Safari</span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-white/90 mb-3">
+                    Get quick access from your home screen. Works offline!
+                  </p>
+                )}
+                <div className="flex space-x-2 mt-3">
+                  {!isIOS && (
+                    <button
+                      onClick={handleInstallClick}
+                      className="flex-1 bg-white text-primary-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-all active:scale-95"
+                    >
+                      Install Now
+                    </button>
+                  )}
                   <button
                     onClick={handleDismissInstall}
-                    className="px-4 py-2 border border-white/30 rounded-lg text-sm hover:bg-white/10 transition-all"
+                    className={`${isIOS ? 'flex-1' : ''} px-4 py-2 border border-white/30 rounded-lg text-sm hover:bg-white/10 transition-all`}
                   >
-                    Later
+                    {isIOS ? 'Got it!' : 'Later'}
                   </button>
                 </div>
               </div>
