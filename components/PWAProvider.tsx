@@ -158,7 +158,7 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
 
       {/* Install App Prompt */}
       {showInstallPrompt && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 shadow-2xl animate-slide-up">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 shadow-2xl animate-slide-up">
           <div className="max-w-md mx-auto">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0 w-12 h-12 bg-white rounded-lg p-2">
@@ -221,7 +221,7 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
 
       {/* Enable Notifications Prompt */}
       {showNotificationPrompt && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-4 shadow-2xl animate-slide-up">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-4 shadow-2xl animate-slide-up">
           <div className="max-w-md mx-auto">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
