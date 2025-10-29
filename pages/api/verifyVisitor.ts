@@ -38,9 +38,17 @@ export default async function handler(
       visitor: {
         id: visitor.id,
         name: visitor.name,
+        email: visitor.email,
+        phone: visitor.phone,
+        register_number: visitor.register_number,
         event_name: visitor.event_name,
+        visitor_category: visitor.visitor_category,
+        purpose: visitor.purpose,
         date_of_visit: visitor.date_of_visit,
+        date_of_visit_from: visitor.date_of_visit_from,
+        date_of_visit_to: visitor.date_of_visit_to,
         status: visitor.status,
+        photo_url: visitor.photo_url,
       },
     });
   } catch (error) {
