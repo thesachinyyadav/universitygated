@@ -231,6 +231,30 @@ export default function PhotoCapture({ onPhotoCapture, capturedPhoto }: PhotoCap
               className="w-full h-auto"
             />
             
+            {/* Face Guide Overlay */}
+            {isVideoReady && (
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                {/* Center circle guide */}
+                <div className="relative">
+                  <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 rounded-full border-4 border-white border-dashed opacity-70 animate-pulse"></div>
+                  {/* Corner markers */}
+                  <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-400 rounded-tl-3xl"></div>
+                  <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-400 rounded-tr-3xl"></div>
+                  <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-400 rounded-bl-3xl"></div>
+                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-400 rounded-br-3xl"></div>
+                </div>
+                
+                {/* Instruction Text */}
+                <div className="absolute top-4 left-0 right-0 text-center">
+                  <div className="inline-block bg-black bg-opacity-70 px-4 py-2 rounded-lg">
+                    <p className="text-white text-sm font-semibold">
+                      📸 Center your face in the circle
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {!isVideoReady && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
                 <div className="text-center text-white">
