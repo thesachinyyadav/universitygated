@@ -230,6 +230,41 @@ export default function PhotoCapture({ onPhotoCapture, capturedPhoto }: PhotoCap
               muted
               className="w-full h-auto"
             />
+            
+            {/* Face Oval Overlay */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Dark overlay with oval cutout effect */}
+              <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                  <mask id="faceOvalMask">
+                    <rect width="100" height="100" fill="white" />
+                    <ellipse cx="50" cy="45" rx="30" ry="38" fill="black" />
+                  </mask>
+                </defs>
+                <rect width="100" height="100" fill="rgba(0, 0, 0, 0.6)" mask="url(#faceOvalMask)" />
+                <ellipse 
+                  cx="50" 
+                  cy="45" 
+                  rx="30" 
+                  ry="38" 
+                  fill="none" 
+                  stroke="white" 
+                  strokeWidth="0.5"
+                  strokeDasharray="3 2"
+                  className="animate-pulse"
+                />
+              </svg>
+              
+              {/* Instruction Text */}
+              <div className="absolute top-4 left-0 right-0 text-center">
+                <div className="inline-block bg-black bg-opacity-70 px-4 py-2 rounded-lg">
+                  <p className="text-white text-sm font-semibold">
+                    Position your face inside the oval
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             {!isVideoReady && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
                 <div className="text-center text-white">

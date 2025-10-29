@@ -252,6 +252,18 @@ export default function GuardDashboard() {
                       <h2 className="text-lg sm:text-xl font-bold text-green-700 mb-2 sm:mb-3">
                         ACCESS GRANTED
                       </h2>
+                      
+                      {/* Visitor Photo */}
+                      {verificationResult.visitor?.photo_url && (
+                        <div className="flex justify-center mb-3">
+                          <img 
+                            src={verificationResult.visitor.photo_url} 
+                            alt={verificationResult.visitor.name}
+                            className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-green-500 shadow-lg"
+                          />
+                        </div>
+                      )}
+                      
                       {verificationResult.visitor && (
                         <div className="space-y-1.5 text-left bg-white p-2 sm:p-3 rounded-lg text-xs sm:text-sm">
                           <div className="flex justify-between gap-2">
@@ -262,6 +274,12 @@ export default function GuardDashboard() {
                             <span className="font-semibold">Event:</span>
                             <span className="text-right break-words">{verificationResult.visitor.event_name || 'N/A'}</span>
                           </div>
+                          {verificationResult.visitor.register_number && (
+                            <div className="flex justify-between gap-2">
+                              <span className="font-semibold">Register No:</span>
+                              <span className="text-right font-mono text-primary-600">{verificationResult.visitor.register_number}</span>
+                            </div>
+                          )}
                           <div className="flex justify-between gap-2">
                             <span className="font-semibold">Date:</span>
                             <span className="text-right">
