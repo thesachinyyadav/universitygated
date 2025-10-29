@@ -8,6 +8,7 @@ interface PhotoCaptureProps {
 
 export default function PhotoCapture({ onPhotoCapture, capturedPhoto }: PhotoCaptureProps) {
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -18,8 +19,20 @@ export default function PhotoCapture({ onPhotoCapture, capturedPhoto }: PhotoCap
         video: { facingMode: 'user', width: 640, height: 480 } 
       });
       setStream(mediaStream);
+      setIsVideoReady(false);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+        };
+        
+        videoRef.current.onplaying = () => {
+          setIsVideoReady(true);
+          console.log('Video is ready and playing');
+        };
       }
       setIsCameraActive(true);
     } catch (error) {
@@ -34,23 +47,45 @@ export default function PhotoCapture({ onPhotoCapture, capturedPhoto }: PhotoCap
       setStream(null);
     }
     setIsCameraActive(false);
+    setIsVideoReady(false);
   };
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
+      
+      // Check if video is ready
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        alert('⚠️ Video not ready yet. Please wait a moment and try again.');
+        return;
+      }
+      
       const context = canvas.getContext('2d');
       
       if (context) {
+        // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0);
         
+        // Draw the video frame to canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert canvas to data URL
         const photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        
+        console.log('Photo captured, data URL length:', photoDataUrl.length);
+        
+        // Pass photo to parent component
         onPhotoCapture(photoDataUrl);
+        
+        // Stop camera
         stopCamera();
+      } else {
+        alert('❌ Failed to get canvas context');
       }
+    } else {
+      alert('❌ Camera not ready');
     }
   };
 
@@ -110,19 +145,33 @@ export default function PhotoCapture({ onPhotoCapture, capturedPhoto }: PhotoCap
               ref={videoRef}
               autoPlay
               playsInline
+              muted
               className="w-full h-auto"
             />
+            {!isVideoReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="text-center text-white">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-2"></div>
+                  <p className="text-sm">Loading camera...</p>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex space-x-3">
             <button
               type="button"
               onClick={capturePhoto}
-              className="btn-primary flex-1 flex items-center justify-center space-x-2"
+              disabled={!isVideoReady}
+              className={`flex-1 flex items-center justify-center space-x-2 ${
+                isVideoReady 
+                  ? 'btn-primary' 
+                  : 'bg-gray-300 text-gray-500 px-6 py-3 rounded-lg font-semibold cursor-not-allowed'
+              }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               </svg>
-              <span>Capture Photo</span>
+              <span>{isVideoReady ? 'Capture Photo' : 'Please wait...'}</span>
             </button>
             <button
               type="button"
