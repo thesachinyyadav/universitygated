@@ -7,7 +7,6 @@ interface QRScannerProps {
 }
 
 export default function QRScanner({ onScan }: QRScannerProps) {
-  const [manualId, setManualId] = useState('');
   const [scannerInitialized, setScannerInitialized] = useState(false);
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [scannerActive, setScannerActive] = useState(false);
@@ -168,22 +167,13 @@ export default function QRScanner({ onScan }: QRScannerProps) {
     };
   }, []); // Empty dependency array - only run on mount/unmount
 
-  const handleManualSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (manualId.trim()) {
-      onScan(manualId.trim());
-    }
-  };
-
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Camera Scanner */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="card"
-      >
-        <div className="flex items-center space-x-3 mb-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="card"
+    >
+      <div className="flex items-center space-x-3 mb-4">
           <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -243,44 +233,5 @@ export default function QRScanner({ onScan }: QRScannerProps) {
           </>
         )}
       </motion.div>
-
-      {/* Manual Entry */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="card"
-      >
-        <div className="flex items-center space-x-3 mb-4">
-          <svg className="w-6 h-6 text-tertiary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          <h3 className="text-lg md:text-xl font-semibold text-gray-800">
-            Manual Entry
-          </h3>
-        </div>
-        <form onSubmit={handleManualSubmit} className="space-y-4">
-          <div>
-            <label className="label">Enter Visitor ID</label>
-            <input
-              type="text"
-              value={manualId}
-              onChange={(e) => setManualId(e.target.value)}
-              placeholder="Paste or type visitor ID"
-              className="input-field"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-tertiary-600 hover:bg-tertiary-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-md hover:shadow-lg active:scale-95"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>Verify Access</span>
-          </button>
-        </form>
-      </motion.div>
-    </div>
   );
 }

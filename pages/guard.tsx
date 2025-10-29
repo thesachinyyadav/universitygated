@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
 import QRScanner from '@/components/QRScanner';
+import ManualEntry from '@/components/ManualEntry';
 import type { Visitor } from '@/types/database';
 
 interface ScanHistoryItem {
@@ -131,7 +132,7 @@ export default function GuardDashboard() {
         </div>
 
         <div className="space-y-3 sm:space-y-4">
-          {/* 1. Scan QR Code & Manual Entry */}
+          {/* 1. Scan QR Code */}
           <QRScanner onScan={handleScan} />
 
           {/* 2. Scan History */}
@@ -346,8 +347,11 @@ export default function GuardDashboard() {
                 </motion.div>
               )}
             </div>
-          </div>
+
+          {/* 4. Manual Entry */}
+          <ManualEntry onVerify={handleScan} />
         </div>
+      </div>
 
       {/* Visitor Details Modal */}
       <AnimatePresence>
