@@ -131,10 +131,8 @@ export default function GuardDashboard() {
         </div>
 
         <div className="space-y-3 sm:space-y-4">
-          {/* 1. Scan QR Code */}
-          <div className="card p-3 sm:p-4">
-            <QRScanner onScan={handleScan} />
-          </div>
+          {/* 1. Scan QR Code & Manual Entry */}
+          <QRScanner onScan={handleScan} />
 
           {/* 2. Scan History */}
           <div className="card p-3 sm:p-4">
@@ -347,22 +345,6 @@ export default function GuardDashboard() {
                   </button>
                 </motion.div>
               )}
-            </div>
-
-            {/* 4. Manual Entry (Placeholder for future feature) */}
-            <div className="card p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center space-x-2">
-                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                <span>Manual Entry</span>
-              </h3>
-              <div className="text-center py-6 text-gray-400">
-                <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                <p className="text-xs sm:text-sm">Manual visitor entry coming soon</p>
-              </div>
             </div>
           </div>
         </div>
