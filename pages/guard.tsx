@@ -381,6 +381,17 @@ export default function GuardDashboard() {
                     <p className="text-lg font-bold text-gray-800">{selectedVisitor.name}</p>
                   </div>
 
+                  {selectedVisitor.register_number && (
+                    <div className="bg-primary-50 -mx-6 px-6 py-3 border-l-4 border-primary-600">
+                      <p className="text-base font-extrabold text-primary-900 mb-1">
+                        ID NUMBER
+                      </p>
+                      <p className="text-2xl font-black text-primary-600 font-mono tracking-wide">
+                        {selectedVisitor.register_number}
+                      </p>
+                    </div>
+                  )}
+
                   {selectedVisitor.email && (
                     <div>
                       <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Email</label>
@@ -392,13 +403,6 @@ export default function GuardDashboard() {
                     <div>
                       <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Phone</label>
                       <p className="text-gray-700">{selectedVisitor.phone}</p>
-                    </div>
-                  )}
-
-                  {selectedVisitor.register_number && (
-                    <div>
-                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Register Number</label>
-                      <p className="text-gray-700 font-mono font-semibold">{selectedVisitor.register_number}</p>
                     </div>
                   )}
 
