@@ -14,7 +14,8 @@ export default async function handler(
     const { 
       name, 
       phone, 
-      email, 
+      email,
+      register_number,
       event_id,
       event_name, 
       date_of_visit_from,
@@ -160,6 +161,7 @@ export default async function handler(
           name,
           phone,
           email,
+          register_number,
           event_id: event!.id, // Use the actual event.id, not the request id
           event_name,
           date_of_visit_from,

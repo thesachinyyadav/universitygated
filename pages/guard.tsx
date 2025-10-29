@@ -377,6 +377,13 @@ export default function GuardDashboard() {
                     </div>
                   )}
 
+                  {selectedVisitor.register_number && (
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Register Number</label>
+                      <p className="text-gray-700 font-mono font-semibold">{selectedVisitor.register_number}</p>
+                    </div>
+                  )}
+
                   {selectedVisitor.event_name && (
                     <div>
                       <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Event</label>

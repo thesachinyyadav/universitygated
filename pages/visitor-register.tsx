@@ -23,6 +23,7 @@ export default function VisitorRegister() {
     name: '',
     phone: '',
     email: '',
+    register_number: '',
     event_id: '',
     visitor_category: 'student',
     purpose: '',
@@ -180,6 +181,18 @@ export default function VisitorRegister() {
                   onChange={handleChange}
                   className="input-field text-xs sm:text-sm py-2"
                   placeholder="your@email.com"
+                />
+              </div>
+
+              <div>
+                <label className="label text-xs sm:text-sm">College Register Number</label>
+                <input
+                  type="text"
+                  name="register_number"
+                  value={formData.register_number}
+                  onChange={handleChange}
+                  className="input-field text-xs sm:text-sm py-2"
+                  placeholder="e.g., 2021BCSXXX"
                 />
               </div>
             </div>
