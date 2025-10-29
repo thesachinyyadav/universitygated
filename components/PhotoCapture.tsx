@@ -15,29 +15,92 @@ export default function PhotoCapture({ onPhotoCapture, capturedPhoto }: PhotoCap
 
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user', width: 640, height: 480 } 
-      });
-      setStream(mediaStream);
-      setIsVideoReady(false);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        
-        // Wait for video to be ready
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
-        };
-        
-        videoRef.current.onplaying = () => {
-          setIsVideoReady(true);
-          console.log('Video is ready and playing');
-        };
+      // Check if running on HTTPS or localhost
+      const isSecureContext = window.isSecureContext || window.location.hostname === 'localhost';
+      if (!isSecureContext) {
+        alert('⚠️ Camera requires HTTPS! Please use the deployed Vercel URL or localhost.');
+        return;
       }
+
+      // Check if mediaDevices API is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert('❌ Camera API not available in this browser. Please use Chrome, Firefox, or Safari.');
+        return;
+      }
+
+      console.log('🎥 Requesting camera access for photo...');
+      
+      // Request camera access
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'user', 
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      });
+      
+      console.log('✅ Camera access granted!');
+      setStream(mediaStream);
       setIsCameraActive(true);
-    } catch (error) {
-      console.error('Camera error:', error);
-      alert('❌ Unable to access camera. Please check permissions.');
+      
+      // Wait for next tick to ensure video element is rendered
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+          
+          // Wait for video to start playing
+          videoRef.current.onloadedmetadata = () => {
+            console.log('📹 Video metadata loaded');
+            videoRef.current?.play().then(() => {
+              console.log('▶️ Video playing');
+              setIsVideoReady(true);
+            }).catch((err) => {
+              console.error('Play error:', err);
+              alert('⚠️ Failed to start video. Please try again.');
+            });
+          };
+        }
+      }, 100);
+      
+    } catch (error: any) {
+      console.error('❌ Camera error:', error);
+      
+      let errorMessage = '';
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage = '🚫 Camera access denied!\n\nPlease click the camera icon in your browser address bar and allow camera access.';
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        errorMessage = '📷 No camera found on this device.';
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        errorMessage = '⚠️ Camera is being used by another application.\n\nPlease close other apps using the camera and try again.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage = '⚙️ Camera constraints not supported. Trying without constraints...';
+        // Retry without constraints
+        try {
+          const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setStream(mediaStream);
+          setIsCameraActive(true);
+          
+          setTimeout(() => {
+            if (videoRef.current) {
+              videoRef.current.srcObject = mediaStream;
+              videoRef.current.onloadedmetadata = () => {
+                videoRef.current?.play().then(() => {
+                  setIsVideoReady(true);
+                });
+              };
+            }
+          }, 100);
+          return;
+        } catch (retryError) {
+          errorMessage = '❌ Camera initialization failed.';
+        }
+      } else if (error.name === 'SecurityError') {
+        errorMessage = '🔒 Security error: Camera requires HTTPS!\n\nPlease use the deployed Vercel URL.';
+      } else {
+        errorMessage = `❌ Camera error: ${error.message || 'Unknown error'}\n\nPlease check browser settings.`;
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -51,41 +114,60 @@ export default function PhotoCapture({ onPhotoCapture, capturedPhoto }: PhotoCap
   };
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      
-      // Check if video is ready
-      if (video.videoWidth === 0 || video.videoHeight === 0) {
-        alert('⚠️ Video not ready yet. Please wait a moment and try again.');
-        return;
-      }
-      
-      const context = canvas.getContext('2d');
-      
-      if (context) {
-        // Set canvas dimensions to match video
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        
-        // Draw the video frame to canvas
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        // Convert canvas to data URL
-        const photoDataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        
-        console.log('Photo captured, data URL length:', photoDataUrl.length);
-        
-        // Pass photo to parent component
-        onPhotoCapture(photoDataUrl);
-        
-        // Stop camera
-        stopCamera();
-      } else {
-        alert('❌ Failed to get canvas context');
-      }
-    } else {
+    console.log('📸 Attempting to capture photo...');
+    
+    if (!videoRef.current || !canvasRef.current) {
+      console.error('Video or canvas ref not available');
       alert('❌ Camera not ready');
+      return;
+    }
+    
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    // Check if video is ready
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.error('Video dimensions are 0');
+      alert('⚠️ Video not ready yet. Please wait a moment and try again.');
+      return;
+    }
+    
+    console.log(`📹 Video dimensions: ${video.videoWidth}x${video.videoHeight}`);
+    
+    const context = canvas.getContext('2d');
+    
+    if (!context) {
+      console.error('Failed to get canvas context');
+      alert('❌ Failed to get canvas context');
+      return;
+    }
+    
+    try {
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // Draw the video frame to canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Convert canvas to data URL
+      const photoDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      
+      console.log('✅ Photo captured successfully, size:', photoDataUrl.length, 'bytes');
+      
+      // Pass photo to parent component
+      onPhotoCapture(photoDataUrl);
+      
+      // Stop camera
+      stopCamera();
+      
+      // Success feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(200);
+      }
+    } catch (error) {
+      console.error('❌ Error capturing photo:', error);
+      alert('❌ Failed to capture photo. Please try again.');
     }
   };
 
