@@ -27,6 +27,8 @@ export interface Visitor {
   visitor_category?: VisitorCategory;
   qr_color?: string;
   status: VisitorStatus;
+  verified_by?: string; // Guard username who verified
+  verified_at?: string; // Timestamp when verified
   created_at: string;
   updated_at: string;
 }

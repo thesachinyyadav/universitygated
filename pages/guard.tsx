@@ -50,7 +50,7 @@ export default function GuardDashboard() {
     setVerificationResult(null);
 
     try {
-      const response = await fetch(`/api/verifyVisitor?id=${visitorId}`);
+      const response = await fetch(`/api/verifyVisitor?id=${visitorId}&guard_username=${user?.username || 'unknown'}`);
       const data = await response.json();
 
       setVerificationResult(data);

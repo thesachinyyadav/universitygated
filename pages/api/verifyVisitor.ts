@@ -11,7 +11,7 @@ export default async function handler(
   }
 
   try {
-    const { id } = req.query;
+    const { id, guard_username } = req.query;
 
     if (!id || typeof id !== 'string') {
       return res.status(400).json({ error: 'Visitor ID is required' });
@@ -88,6 +88,22 @@ export default async function handler(
 
     // Check if access is granted
     const isVerified = visitor.status === 'approved' && isWithinDateRange;
+
+    // If verified successfully and guard_username provided, update verification tracking
+    if (isVerified && guard_username && typeof guard_username === 'string') {
+      const { error: updateError } = await supabase
+        .from('visitors')
+        .update({
+          verified_by: guard_username,
+          verified_at: new Date().toISOString()
+        })
+        .eq('id', id);
+      
+      if (updateError) {
+        console.error('Error updating verification tracking:', updateError);
+        // Don't fail the request if tracking update fails
+      }
+    }
 
     return res.status(200).json({
       verified: isVerified,

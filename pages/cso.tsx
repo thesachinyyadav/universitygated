@@ -39,6 +39,7 @@ export default function CSODashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [rejectionReason, setRejectionReason] = useState<{ [key: string]: string }>({});
   const [activeTab, setActiveTab] = useState<'events' | 'visitors'>('events');
+  const [selectedEventFilter, setSelectedEventFilter] = useState<string>('');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -236,11 +237,15 @@ export default function CSODashboard() {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5);
 
-  const filteredVisitors = visitors.filter(v =>
-    v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    v.event_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredVisitors = visitors.filter(v => {
+    const matchesSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.event_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesEvent = !selectedEventFilter || v.event_name === selectedEventFilter;
+    
+    return matchesSearch && matchesEvent;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 py-3 sm:py-4 md:py-6 px-3 sm:px-4">
@@ -507,7 +512,14 @@ export default function CSODashboard() {
           {topEvents.length > 0 ? (
             <div className="space-y-2">
               {topEvents.map(([event, count], index) => (
-                <div key={event} className="flex items-center justify-between py-1">
+                <button
+                  key={event}
+                  onClick={() => {
+                    setSelectedEventFilter(event);
+                    setActiveTab('visitors');
+                  }}
+                  className="w-full flex items-center justify-between py-1 hover:bg-gray-100 px-2 rounded transition cursor-pointer"
+                >
                   <div className="flex items-center space-x-2 sm:space-x-3">
                     <div className="w-6 h-6 sm:w-8 sm:h-8 bg-maroon-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold">
                       {index + 1}
@@ -515,7 +527,7 @@ export default function CSODashboard() {
                     <span className="font-medium text-sm sm:text-base text-gray-800">{event}</span>
                   </div>
                   <span className="text-xs sm:text-sm text-gray-600">{count} visitors</span>
-                </div>
+                </button>
               ))}
             </div>
           ) : (
@@ -525,7 +537,7 @@ export default function CSODashboard() {
 
         {/* Search and Export */}
         <div className="card mb-4 sm:mb-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 gap-3">
             <div className="flex-1 max-w-md">
               <input
                 type="text"
@@ -535,6 +547,17 @@ export default function CSODashboard() {
                 className="input-field"
               />
             </div>
+            {selectedEventFilter && (
+              <div className="flex items-center space-x-2 bg-primary-100 text-primary-800 px-3 py-2 rounded-lg">
+                <span className="text-sm font-medium">Filtered by: {selectedEventFilter}</span>
+                <button
+                  onClick={() => setSelectedEventFilter('')}
+                  className="text-primary-600 hover:text-primary-800 font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
             <button
               onClick={exportToCSV}
               className="btn-secondary whitespace-nowrap flex items-center space-x-2"
@@ -566,11 +589,12 @@ export default function CSODashboard() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">ID</th>
                     <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Name</th>
-                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Contact</th>
                     <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Event</th>
-                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Date</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Verified By</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Verified At</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Contact</th>
+                    <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Visit Date</th>
                     <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Status</th>
                     <th className="px-2 py-2 text-left text-xs font-semibold text-gray-700">Actions</th>
                   </tr>
@@ -579,10 +603,34 @@ export default function CSODashboard() {
                   {filteredVisitors.map((visitor) => (
                     <tr key={visitor.id} className="border-t hover:bg-gray-50">
                       <td className="px-2 py-2">
-                        <code className="text-xs text-gray-500">{visitor.id.slice(0, 8)}...</code>
-                      </td>
-                      <td className="px-2 py-2">
                         <div className="font-medium text-gray-800 text-sm">{visitor.name}</div>
+                        {visitor.register_number && (
+                          <div className="text-xs text-gray-500">ID: {visitor.register_number}</div>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-gray-700 text-sm max-w-[150px] truncate">{visitor.event_name || 'N/A'}</td>
+                      <td className="px-2 py-2">
+                        {visitor.verified_by ? (
+                          <div className="flex items-center space-x-1">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-sm font-medium text-gray-700">{visitor.verified_by}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">Not verified</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-xs text-gray-600 whitespace-nowrap">
+                        {visitor.verified_at 
+                          ? new Date(visitor.verified_at).toLocaleString('en-IN', { 
+                              day: 'numeric', 
+                              month: 'short', 
+                              year: 'numeric',
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })
+                          : '-'}
                       </td>
                       <td className="px-2 py-2">
                         <div className="text-xs text-gray-600">
@@ -591,7 +639,6 @@ export default function CSODashboard() {
                           {!visitor.email && !visitor.phone && <span className="text-gray-400">N/A</span>}
                         </div>
                       </td>
-                      <td className="px-2 py-2 text-gray-700 text-sm max-w-[150px] truncate">{visitor.event_name || 'N/A'}</td>
                       <td className="px-2 py-2 text-gray-700 text-xs whitespace-nowrap">
                         {(visitor.date_of_visit && visitor.date_of_visit !== '') 
                           ? new Date(visitor.date_of_visit).toLocaleDateString() 
