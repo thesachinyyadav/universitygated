@@ -85,8 +85,10 @@ CREATE TABLE visitors (
   visitor_category TEXT DEFAULT 'student' CHECK(visitor_category IN ('student', 'speaker', 'vip')) NOT NULL,
   qr_color TEXT DEFAULT '#1e40af',
   status TEXT DEFAULT 'approved' CHECK(status IN ('approved', 'revoked')) NOT NULL,
-  verified_at TIMESTAMP,
-  verified_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  photo_url TEXT,
+  register_number TEXT,
+  verified_at TIMESTAMP WITH TIME ZONE,
+  verified_by TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -116,6 +118,9 @@ CREATE INDEX idx_events_capacity ON events(current_registrations, max_capacity);
 CREATE INDEX idx_visitors_event ON visitors(event_id);
 CREATE INDEX idx_visitors_category ON visitors(visitor_category);
 CREATE INDEX idx_visitors_status ON visitors(status);
+CREATE INDEX idx_visitors_register_number ON visitors(register_number);
+CREATE INDEX idx_visitors_verified_by ON visitors(verified_by);
+CREATE INDEX idx_visitors_verified_at ON visitors(verified_at);
 CREATE INDEX idx_notifications_user ON notifications(user_id, is_read);
 
 -- =====================================================
@@ -306,6 +311,46 @@ INSERT INTO event_requests (
 );
 
 -- =====================================================
+-- COLUMN COMMENTS
+-- =====================================================
+
+-- Add comments to visitor tracking columns
+COMMENT ON COLUMN visitors.photo_url IS 'URL of the visitor photo stored in Supabase storage';
+COMMENT ON COLUMN visitors.register_number IS 'University register/ID number of the visitor';
+COMMENT ON COLUMN visitors.verified_by IS 'Username of the guard who verified this visitor';
+COMMENT ON COLUMN visitors.verified_at IS 'Timestamp when the visitor was verified by guard';
+
+-- =====================================================
+-- STORAGE BUCKET FOR VISITOR PHOTOS
+-- =====================================================
+
+-- Create storage bucket for visitor photos
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('visitor-photos', 'visitor-photos', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies for visitor photos bucket
+-- Allow public read access
+CREATE POLICY "Public read access for visitor photos"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'visitor-photos');
+
+-- Allow authenticated uploads
+CREATE POLICY "Allow authenticated uploads"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'visitor-photos');
+
+-- Allow authenticated updates
+CREATE POLICY "Allow authenticated updates"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'visitor-photos');
+
+-- Allow authenticated deletes
+CREATE POLICY "Allow authenticated deletes"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'visitor-photos');
+
+-- =====================================================
 -- VERIFICATION QUERIES
 -- Run these to verify setup
 -- =====================================================
@@ -447,3 +492,16 @@ ORDER BY v.created_at DESC;
 
 -- To verify everything is set up correctly:
 -- SELECT 'Setup Complete!' as status;
+
+-- Verify new visitor columns
+SELECT column_name, data_type 
+FROM information_schema.columns 
+WHERE table_name = 'visitors' 
+AND column_name IN ('photo_url', 'register_number', 'verified_by', 'verified_at');
+
+-- Verify storage bucket
+SELECT * FROM storage.buckets WHERE id = 'visitor-photos';
+
+-- Verify storage policies
+SELECT * FROM pg_policies 
+WHERE tablename = 'objects' AND schemaname = 'storage';
