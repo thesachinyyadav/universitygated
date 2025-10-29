@@ -130,124 +130,125 @@ export default function GuardDashboard() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-3 sm:gap-4">
-          {/* Scanner Section */}
-          <div className="lg:col-span-1 space-y-3 sm:space-y-4">
+        <div className="space-y-3 sm:space-y-4">
+          {/* 1. Scan QR Code */}
+          <div className="card p-3 sm:p-4">
             <QRScanner onScan={handleScan} />
-
-            {/* Scan History */}
-            <div className="card p-3 sm:p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-800">
-                    Scan History
-                    {scanHistory.length > 0 && (
-                      <span className="ml-2 text-xs sm:text-sm font-normal text-gray-500">
-                        ({scanHistory.length})
-                      </span>
-                    )}
-                  </h3>
-                </div>
-                {scanHistory.length > 0 && (
-                  <button
-                    onClick={clearHistory}
-                    className="text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 rounded-lg hover:bg-red-50 transition"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-
-              {scanHistory.length === 0 ? (
-                <div className="text-center py-4 text-gray-400">
-                  <svg className="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <p className="text-xs">No scans yet</p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                  <AnimatePresence>
-                    {scanHistory.map((item, index) => (
-                      <motion.div
-                        key={`${item.id}-${item.timestamp.getTime()}`}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ duration: 0.2 }}
-                        onClick={() => item.visitor && setSelectedVisitor(item.visitor as Visitor)}
-                        className={`p-2 rounded-lg border-2 cursor-pointer hover:shadow-md transition ${
-                          item.verified
-                            ? 'bg-green-50 border-green-200 hover:bg-green-100'
-                            : 'bg-red-50 border-red-200 hover:bg-red-100'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {/* Photo */}
-                          {item.visitor?.photo_url ? (
-                            <img 
-                              src={item.visitor.photo_url} 
-                              alt={item.visitor.name}
-                              className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                              </svg>
-                            </div>
-                          )}
-                          
-                          {/* Visitor Info */}
-                          <div className="flex-1 min-w-0">
-                            {item.visitor ? (
-                              <>
-                                <p className="font-semibold text-gray-800 text-xs truncate">
-                                  {item.visitor.name}
-                                </p>
-                                <p className="text-xs text-gray-500 truncate">
-                                  {item.visitor.event_name || 'No event'} • {item.timestamp.toLocaleTimeString()}
-                                </p>
-                              </>
-                            ) : (
-                              <>
-                                <p className="font-medium text-red-600 text-xs">
-                                  Invalid ID
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {item.timestamp.toLocaleTimeString()}
-                                </p>
-                              </>
-                            )}
-                          </div>
-
-                          {/* Status Badge */}
-                          <span className={`text-xs px-2 py-1 rounded-full font-semibold flex-shrink-0 ${
-                            item.verified
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}>
-                            {item.verified ? '✓' : '✗'}
-                          </span>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Verification Result */}
-          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-            {/* Current Scan Result */}
-            <div className="card p-3 sm:p-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 sm:mb-3">
-                Current Scan
-              </h3>
+          {/* 2. Scan History */}
+          <div className="card p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+                  Scan History
+                  {scanHistory.length > 0 && (
+                    <span className="ml-2 text-xs sm:text-sm font-normal text-gray-500">
+                      ({scanHistory.length})
+                    </span>
+                  )}
+                </h3>
+              </div>
+              {scanHistory.length > 0 && (
+                <button
+                  onClick={clearHistory}
+                  className="text-xs sm:text-sm text-red-600 hover:text-red-700 font-medium px-3 py-1 rounded-lg hover:bg-red-50 transition"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {scanHistory.length === 0 ? (
+              <div className="text-center py-4 text-gray-400">
+                <svg className="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-xs">No scans yet</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[400px] overflow-y-auto">
+                <AnimatePresence>
+                  {scanHistory.map((item, index) => (
+                    <motion.div
+                      key={`${item.id}-${item.timestamp.getTime()}`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.2 }}
+                      onClick={() => item.visitor && setSelectedVisitor(item.visitor as Visitor)}
+                      className={`p-2 rounded-lg border-2 cursor-pointer hover:shadow-md transition ${
+                        item.verified
+                          ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                          : 'bg-red-50 border-red-200 hover:bg-red-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {/* Photo */}
+                        {item.visitor?.photo_url ? (
+                          <img 
+                            src={item.visitor.photo_url} 
+                            alt={item.visitor.name}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                        )}
+                        
+                        {/* Visitor Info */}
+                        <div className="flex-1 min-w-0">
+                          {item.visitor ? (
+                            <>
+                              <p className="font-semibold text-gray-800 text-xs truncate">
+                                {item.visitor.name}
+                              </p>
+                              <p className="text-xs text-gray-500 truncate">
+                                {item.visitor.event_name || 'No event'} • {item.timestamp.toLocaleTimeString()}
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="font-medium text-red-600 text-xs">
+                                Invalid ID
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {item.timestamp.toLocaleTimeString()}
+                              </p>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Status Badge */}
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold flex-shrink-0 ${
+                          item.verified
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {item.verified ? '✓' : '✗'}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+
+          {/* 3. Current Scan Result */}
+          <div className="card p-3 sm:p-4">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center space-x-2">
+              <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Current Scan</span>
+            </h3>
 
               {isVerifying && (
                 <div className="text-center py-6 sm:py-8">
@@ -347,9 +348,24 @@ export default function GuardDashboard() {
                 </motion.div>
               )}
             </div>
+
+            {/* 4. Manual Entry (Placeholder for future feature) */}
+            <div className="card p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center space-x-2">
+                <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span>Manual Entry</span>
+              </h3>
+              <div className="text-center py-6 text-gray-400">
+                <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <p className="text-xs sm:text-sm">Manual visitor entry coming soon</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Visitor Details Modal */}
       <AnimatePresence>
