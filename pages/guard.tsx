@@ -11,6 +11,11 @@ interface ScanHistoryItem {
   visitor?: Partial<Visitor>;
 }
 
+interface NotificationProps {
+  verified: boolean;
+  visitorName?: string;
+}
+
 export default function GuardDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -21,6 +26,7 @@ export default function GuardDashboard() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
   const [selectedVisitor, setSelectedVisitor] = useState<Partial<Visitor> | null>(null);
+  const [notification, setNotification] = useState<NotificationProps | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -46,6 +52,17 @@ export default function GuardDashboard() {
 
       setVerificationResult(data);
       
+      // Show notification
+      setNotification({
+        verified: data.verified,
+        visitorName: data.visitor?.name
+      });
+      
+      // Auto-hide notification after 4 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 4000);
+      
       // Add to scan history
       const historyItem: ScanHistoryItem = {
         id: visitorId,
@@ -62,6 +79,16 @@ export default function GuardDashboard() {
     } catch (error) {
       console.error('Verification error:', error);
       setVerificationResult({ verified: false });
+      
+      // Show error notification
+      setNotification({
+        verified: false
+      });
+      
+      // Auto-hide notification after 4 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 4000);
       
       // Add failed scan to history
       const historyItem: ScanHistoryItem = {
@@ -459,6 +486,83 @@ export default function GuardDashboard() {
                 </button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Notification Toast */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, x: 300 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 300 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-4 right-4 z-50 max-w-sm"
+          >
+            <div className={`rounded-lg shadow-2xl border-2 overflow-hidden ${
+              notification.verified 
+                ? 'bg-green-50 border-green-500' 
+                : 'bg-red-50 border-red-500'
+            }`}>
+              <div className="p-4 flex items-start space-x-3">
+                {/* Icon */}
+                <div className={`flex-shrink-0 ${
+                  notification.verified ? 'text-green-500' : 'text-red-500'
+                }`}>
+                  {notification.verified ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p className={`font-bold text-sm ${
+                    notification.verified ? 'text-green-800' : 'text-red-800'
+                  }`}>
+                    {notification.verified ? 'ACCESS GRANTED ✓' : 'ACCESS DENIED ✗'}
+                  </p>
+                  {notification.visitorName && (
+                    <p className="text-xs text-gray-700 mt-1 truncate">
+                      {notification.visitorName}
+                    </p>
+                  )}
+                  {!notification.verified && !notification.visitorName && (
+                    <p className="text-xs text-gray-700 mt-1">
+                      Invalid QR Code
+                    </p>
+                  )}
+                </div>
+
+                {/* Close button */}
+                <button
+                  onClick={() => setNotification(null)}
+                  className={`flex-shrink-0 rounded-full p-1 hover:bg-white/50 transition ${
+                    notification.verified ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              {/* Progress bar */}
+              <motion.div
+                initial={{ width: '100%' }}
+                animate={{ width: '0%' }}
+                transition={{ duration: 4, ease: 'linear' }}
+                className={`h-1 ${
+                  notification.verified ? 'bg-green-500' : 'bg-red-500'
+                }`}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
