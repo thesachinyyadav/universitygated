@@ -91,18 +91,29 @@ export default async function handler(
 
     // If verified successfully and guard_username provided, update verification tracking
     if (isVerified && guard_username && typeof guard_username === 'string') {
-      const { error: updateError } = await supabase
+      console.log(`[VERIFY] Updating verification tracking for visitor ${id} by guard ${guard_username}`);
+      
+      const { data: updateData, error: updateError } = await supabase
         .from('visitors')
         .update({
           verified_by: guard_username,
           verified_at: new Date().toISOString()
         })
-        .eq('id', id);
+        .eq('id', id)
+        .select();
       
       if (updateError) {
-        console.error('Error updating verification tracking:', updateError);
+        console.error('[VERIFY] Error updating verification tracking:', updateError);
         // Don't fail the request if tracking update fails
+      } else {
+        console.log('[VERIFY] Successfully updated verification tracking:', updateData);
       }
+    } else {
+      console.log('[VERIFY] Skipping verification tracking update:', {
+        isVerified,
+        hasGuardUsername: !!guard_username,
+        guard_username
+      });
     }
 
     return res.status(200).json({
