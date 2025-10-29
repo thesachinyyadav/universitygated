@@ -16,6 +16,7 @@ export interface Visitor {
   name: string;
   phone?: string;
   email?: string;
+  photo_url?: string; // Photo of visitor
   event_id?: string;
   event_name?: string;
   date_of_visit?: string; // Legacy field

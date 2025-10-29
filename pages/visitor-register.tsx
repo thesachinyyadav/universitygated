@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import QRGenerator from '@/components/QRGenerator';
+import PhotoCapture from '@/components/PhotoCapture';
 
 interface ApprovedEvent {
   id: string;
@@ -26,6 +27,7 @@ export default function VisitorRegister() {
     visitor_category: 'student',
     purpose: '',
   });
+  const [capturedPhoto, setCapturedPhoto] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [registeredVisitor, setRegisteredVisitor] = useState<any>(null);
   const [error, setError] = useState('');
@@ -64,6 +66,12 @@ export default function VisitorRegister() {
       return;
     }
 
+    if (!capturedPhoto) {
+      setError('Please capture your photo before registering');
+      setIsSubmitting(false);
+      return;
+    }
+
     const selectedEvent = approvedEvents.find(e => e.id === formData.event_id);
     if (!selectedEvent) {
       setError('Selected event is no longer available');
@@ -79,6 +87,7 @@ export default function VisitorRegister() {
         },
         body: JSON.stringify({
           ...formData,
+          photo_data: capturedPhoto,
           event_name: selectedEvent.event_name,
           date_of_visit_from: selectedEvent.date_from,
           date_of_visit_to: selectedEvent.date_to,
@@ -259,6 +268,12 @@ export default function VisitorRegister() {
                 placeholder="Brief description"
               />
             </div>
+
+            {/* Photo Capture */}
+            <PhotoCapture 
+              onPhotoCapture={setCapturedPhoto}
+              capturedPhoto={capturedPhoto}
+            />
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <button

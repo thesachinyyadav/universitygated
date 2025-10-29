@@ -20,7 +20,8 @@ export default async function handler(
       date_of_visit_from,
       date_of_visit_to,
       visitor_category,
-      purpose 
+      purpose,
+      photo_data
     } = req.body;
 
     // Validate required fields
@@ -34,6 +35,45 @@ export default async function handler(
         visitor_category: !!visitor_category
       });
       return res.status(400).json({ error: 'All required fields must be provided' });
+    }
+
+    let photoUrl = null;
+
+    // Upload photo if provided
+    if (photo_data) {
+      try {
+        // Convert base64 to buffer
+        const base64Data = photo_data.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Generate unique filename
+        const fileName = `visitor-${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+        const filePath = `visitor-photos/${fileName}`;
+
+        // Upload to Supabase storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('visitor-photos')
+          .upload(filePath, buffer, {
+            contentType: 'image/jpeg',
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) {
+          console.error('[REGISTER_VISITOR] Photo upload error:', uploadError);
+        } else {
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from('visitor-photos')
+            .getPublicUrl(filePath);
+          
+          photoUrl = urlData.publicUrl;
+          console.log('[REGISTER_VISITOR] Photo uploaded:', photoUrl);
+        }
+      } catch (photoError) {
+        console.error('[REGISTER_VISITOR] Photo processing error:', photoError);
+        // Continue without photo if upload fails
+      }
     }
 
     console.log('[REGISTER_VISITOR] Looking for event:', event_id);
@@ -126,6 +166,7 @@ export default async function handler(
           date_of_visit_to,
           visitor_category,
           purpose,
+          photo_url: photoUrl,
           status: 'approved', // Auto-approved since event is already approved
         },
       ])

@@ -20,6 +20,7 @@ export default function GuardDashboard() {
   } | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
+  const [selectedVisitor, setSelectedVisitor] = useState<Partial<Visitor> | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -150,51 +151,54 @@ export default function GuardDashboard() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ duration: 0.2 }}
-                        className={`p-2 rounded-lg border-2 ${
+                        onClick={() => item.visitor && setSelectedVisitor(item.visitor as Visitor)}
+                        className={`p-2 rounded-lg border-2 cursor-pointer hover:shadow-md transition ${
                           item.verified
-                            ? 'bg-green-50 border-green-200'
-                            : 'bg-red-50 border-red-200'
+                            ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                            : 'bg-red-50 border-red-200 hover:bg-red-100'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-start space-x-2 flex-1 min-w-0">
-                            {/* Status Icon */}
-                            {item.verified ? (
-                              <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <div className="flex items-center gap-2">
+                          {/* Photo */}
+                          {item.visitor?.photo_url ? (
+                            <img 
+                              src={item.visitor.photo_url} 
+                              alt={item.visitor.name}
+                              className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                               </svg>
-                            ) : (
-                              <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                            )}
-                            
-                            {/* Visitor Info */}
-                            <div className="flex-1 min-w-0">
-                              {item.visitor ? (
-                                <>
-                                  <p className="font-semibold text-gray-800 text-xs truncate">
-                                    {item.visitor.name}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {item.timestamp.toLocaleTimeString()}
-                                  </p>
-                                </>
-                              ) : (
-                                <>
-                                  <p className="font-medium text-red-600 text-xs">
-                                    Invalid ID
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {item.timestamp.toLocaleTimeString()}
-                                  </p>
-                                </>
-                              )}
                             </div>
+                          )}
+                          
+                          {/* Visitor Info */}
+                          <div className="flex-1 min-w-0">
+                            {item.visitor ? (
+                              <>
+                                <p className="font-semibold text-gray-800 text-xs truncate">
+                                  {item.visitor.name}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  {item.visitor.event_name || 'No event'} • {item.timestamp.toLocaleTimeString()}
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                <p className="font-medium text-red-600 text-xs">
+                                  Invalid ID
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {item.timestamp.toLocaleTimeString()}
+                                </p>
+                              </>
+                            )}
                           </div>
 
                           {/* Status Badge */}
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${
+                          <span className={`text-xs px-2 py-1 rounded-full font-semibold flex-shrink-0 ${
                             item.verified
                               ? 'bg-green-100 text-green-700'
                               : 'bg-red-100 text-red-700'
@@ -301,6 +305,134 @@ export default function GuardDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Visitor Details Modal */}
+      <AnimatePresence>
+        {selectedVisitor && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedVisitor(null)}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white p-6 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold">Visitor Details</h2>
+                  <button
+                    onClick={() => setSelectedVisitor(null)}
+                    className="text-white hover:bg-white/20 rounded-full p-2 transition"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Photo */}
+              <div className="p-6">
+                <div className="flex justify-center mb-6">
+                  {selectedVisitor.photo_url ? (
+                    <img 
+                      src={selectedVisitor.photo_url} 
+                      alt={selectedVisitor.name}
+                      className="w-32 h-32 rounded-full object-cover border-4 border-primary-200 shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center border-4 border-gray-300">
+                      <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {/* Details */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Name</label>
+                    <p className="text-lg font-bold text-gray-800">{selectedVisitor.name}</p>
+                  </div>
+
+                  {selectedVisitor.email && (
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Email</label>
+                      <p className="text-gray-700">{selectedVisitor.email}</p>
+                    </div>
+                  )}
+
+                  {selectedVisitor.phone && (
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Phone</label>
+                      <p className="text-gray-700">{selectedVisitor.phone}</p>
+                    </div>
+                  )}
+
+                  {selectedVisitor.event_name && (
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Event</label>
+                      <p className="text-gray-700">{selectedVisitor.event_name}</p>
+                    </div>
+                  )}
+
+                  {selectedVisitor.visitor_category && (
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Category</label>
+                      <p className="text-gray-700 capitalize">{selectedVisitor.visitor_category}</p>
+                    </div>
+                  )}
+
+                  {(selectedVisitor.date_of_visit_from && selectedVisitor.date_of_visit_to) && (
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Visit Period</label>
+                      <p className="text-gray-700">
+                        {new Date(selectedVisitor.date_of_visit_from).toLocaleDateString()} - {new Date(selectedVisitor.date_of_visit_to).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedVisitor.purpose && (
+                    <div>
+                      <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Purpose</label>
+                      <p className="text-gray-700">{selectedVisitor.purpose}</p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Status</label>
+                    <span className={`inline-block mt-1 px-3 py-1 rounded-full text-sm font-semibold ${
+                      selectedVisitor.status === 'approved' 
+                        ? 'bg-green-100 text-green-700'
+                        : selectedVisitor.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {selectedVisitor.status?.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setSelectedVisitor(null)}
+                  className="mt-6 w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 rounded-lg transition"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
