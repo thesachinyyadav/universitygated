@@ -15,6 +15,7 @@ interface ScanHistoryItem {
 interface NotificationProps {
   verified: boolean;
   visitorName?: string;
+  dateError?: string;
 }
 
 export default function GuardDashboard() {
@@ -23,6 +24,7 @@ export default function GuardDashboard() {
   const [verificationResult, setVerificationResult] = useState<{
     verified: boolean;
     visitor?: Partial<Visitor>;
+    dateError?: string;
   } | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [scanHistory, setScanHistory] = useState<ScanHistoryItem[]>([]);
@@ -56,7 +58,8 @@ export default function GuardDashboard() {
       // Show notification
       setNotification({
         verified: data.verified,
-        visitorName: data.visitor?.name
+        visitorName: data.visitor?.name,
+        dateError: data.dateError
       });
       
       // Auto-hide notification after 4 seconds
@@ -332,8 +335,8 @@ export default function GuardDashboard() {
                       <h2 className="text-lg sm:text-xl font-bold text-red-700 mb-2 sm:mb-3">
                         ACCESS DENIED
                       </h2>
-                      <p className="text-red-600 text-xs sm:text-sm">
-                        Invalid QR or access revoked
+                      <p className="text-red-600 text-xs sm:text-sm font-semibold">
+                        {verificationResult.dateError || 'Invalid QR or access revoked'}
                       </p>
                     </div>
                   )}
@@ -535,7 +538,12 @@ export default function GuardDashboard() {
                       {notification.visitorName}
                     </p>
                   )}
-                  {!notification.verified && !notification.visitorName && (
+                  {!notification.verified && notification.dateError && (
+                    <p className="text-xs text-red-700 mt-1 font-semibold">
+                      {notification.dateError}
+                    </p>
+                  )}
+                  {!notification.verified && !notification.visitorName && !notification.dateError && (
                     <p className="text-xs text-gray-700 mt-1">
                       Invalid QR Code
                     </p>

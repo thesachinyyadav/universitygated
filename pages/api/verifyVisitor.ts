@@ -57,6 +57,7 @@ export default async function handler(
     today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
     
     let isWithinDateRange = true;
+    let dateError = '';
     
     if (visitor.date_of_visit_from && visitor.date_of_visit_to) {
       const fromDate = new Date(visitor.date_of_visit_from);
@@ -64,12 +65,25 @@ export default async function handler(
       fromDate.setHours(0, 0, 0, 0);
       toDate.setHours(23, 59, 59, 999); // End of day
       
-      isWithinDateRange = today >= fromDate && today <= toDate;
+      if (today < fromDate) {
+        isWithinDateRange = false;
+        dateError = 'Event has not started yet';
+      } else if (today > toDate) {
+        isWithinDateRange = false;
+        dateError = 'Event date has passed';
+      }
     } else if (visitor.date_of_visit) {
       const visitDate = new Date(visitor.date_of_visit);
       visitDate.setHours(0, 0, 0, 0);
       
-      isWithinDateRange = today.getTime() === visitDate.getTime();
+      if (today.getTime() !== visitDate.getTime()) {
+        isWithinDateRange = false;
+        if (today > visitDate) {
+          dateError = 'Event date has passed';
+        } else {
+          dateError = 'Event has not started yet';
+        }
+      }
     }
 
     // Check if access is granted
@@ -77,6 +91,7 @@ export default async function handler(
 
     return res.status(200).json({
       verified: isVerified,
+      dateError: dateError || undefined,
       visitor: {
         id: visitor.id,
         name: visitor.name,
